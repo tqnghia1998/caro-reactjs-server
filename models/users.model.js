@@ -4,6 +4,10 @@ module.exports = {
 
     all: () => {
         return db.load(`select * from users`);
+    },
+
+    add: entity => {
+        return db.add(`users`, entity);
     }
 
 }
