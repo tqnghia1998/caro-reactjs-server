@@ -4,10 +4,11 @@ var express = require('express');
 var userModel = require('../models/users.model');
 var passport = require('passport');
 var bcrypt = require('bcrypt');
+var jwt = require('jsonwebtoken');
 var router = express.Router();
 
 // test loading database
-router.get('/', (req, res, next) => {
+router.post('/', (req, res, next) => {
     userModel.all().then(rows => {
         res.send("Connect database successful.");
     }).catch(err => {
@@ -46,7 +47,32 @@ router.post('/register', (req, res, next) => {
             res.send("Error: " + err);
         })
     }
+});
 
-})
+// login with username & password
+router.post('/login', (req, res, next) => {
+    passport.authenticate('local', {session: false}, (err, user, info) => {
+        if (err) {
+            return next(err);
+        }
+        if (!user) {
+            return res.status(400).json({
+                message: info.message,
+            });
+        }
+        req.login(user, {session: false}, (err) => {
+            if (err) {
+               res.send(err);
+            }
+
+            // generate a signed son web token with the contents of user object and return it in the response
+            const token = jwt.sign(JSON.stringify(user), 'nghiatq_jwt_secretkey');
+            return res.json({
+                user,
+                token
+            });
+        });
+    })(req, res);
+});
 
 module.exports = router;
