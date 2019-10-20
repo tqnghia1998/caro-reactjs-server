@@ -18,6 +18,10 @@ router.post('/', (req, res, next) => {
 
 // register a new user
 router.post('/register', (req, res, next) => {
+
+    // Enabling CORS
+    res.header("Access-Control-Allow-Origin", "*");
+
     var username = req.body.username;
     var password = req.body.password;
     var email = req.body.email;
@@ -51,6 +55,10 @@ router.post('/register', (req, res, next) => {
 
 // login with username & password
 router.post('/login', (req, res, next) => {
+
+    // Enabling CORS
+    res.header("Access-Control-Allow-Origin", "*");
+
     passport.authenticate('local', {session: false}, (err, user, info) => {
         if (err) {
             return next(err);
