@@ -31,7 +31,7 @@ router.post('/register', (req, res, next) => {
     // check params
     if (!username || !password || !email || !fullname) {
         res.status(400).json({
-            message: 'Please input all fields'
+            message: 'Vui lòng nhập đầy đủ thông tin'
         });
     }
     else {
@@ -50,7 +50,7 @@ router.post('/register', (req, res, next) => {
         // add to database
         userModel.add(entity).then(id => {
             res.status(200).json({
-                message: 'Register success'
+                message: 'Đăng ký tài khoản thành công'
             });
         }).catch(err => {
             res.status(400).json({

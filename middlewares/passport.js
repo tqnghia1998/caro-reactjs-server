@@ -31,7 +31,7 @@ passport.use(new LocalStrategy({
         userModel.get(username).then(rows => {
             if (rows.length === 0) {
                 return done(null, false, {
-                    message: 'Incorrect username.'
+                    message: 'Tên tài khoản không tồn tại'
                 });
             }
             var user = rows[0];
@@ -47,7 +47,7 @@ passport.use(new LocalStrategy({
             }
             else {
                 return done(null, false, {
-                    message: 'Incorrect password.'
+                    message: 'Mật khẩu không chính xác'
                 })
             }
         }).catch(err => {
