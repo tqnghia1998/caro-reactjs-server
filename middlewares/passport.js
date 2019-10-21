@@ -18,7 +18,9 @@ passport.use(new JWTStrategy({
         return userModel.get(jwtPayload.username).then(user => {
             return done(null, user);
         }).catch(err => {
-            return done(err);
+            return done(null, false, {
+                message: err
+            });
         });
     }
 ));
