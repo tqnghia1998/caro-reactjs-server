@@ -10,11 +10,11 @@ var router = express.Router();
 // test loading database
 router.post('/', (req, res, next) => {
     userModel.all().then(rows => {
-        res.json({
-            message: 'onnect database successful'
+        res.status(200).json({
+            message: 'Connect database successful'
         });
     }).catch(err => {
-        res.json({
+        res.status(400).json({
             message: 'Connect database fail'
         });
     });
@@ -30,7 +30,7 @@ router.post('/register', (req, res, next) => {
 
     // check params
     if (!username || !password || !email || !fullname) {
-        res.json({
+        res.status(400).json({
             message: 'Please input all fields'
         });
     }
@@ -49,11 +49,11 @@ router.post('/register', (req, res, next) => {
 
         // add to database
         userModel.add(entity).then(id => {
-            res.json({
+            res.status(200).json({
                 message: 'Register success'
             });
         }).catch(err => {
-            res.json({
+            res.status(400).json({
                 message: err
             });
         })
@@ -74,7 +74,7 @@ router.post('/login', (req, res, next) => {
         }
         req.login(user, {session: false}, (err) => {
             if (err) {
-                res.json({
+                res.status(400).json({
                     message: err
                 });
             }

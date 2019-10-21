@@ -14,7 +14,12 @@ router.get('/me', (req, res, next) => {
             email: user.email,
             fullname: user.fullname
         }
-        res.json(info);
+        res.status(200).json(info);
+    }
+    else {
+        res.status(400).json({
+            message: 'Something is wrong'
+        })
     }
 });
 
