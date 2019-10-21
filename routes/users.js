@@ -10,17 +10,18 @@ var router = express.Router();
 // test loading database
 router.post('/', (req, res, next) => {
     userModel.all().then(rows => {
-        res.send("Connect database successful.");
+        res.json({
+            message: 'onnect database successful'
+        });
     }).catch(err => {
-        res.send("Connect database fail.");
+        res.json({
+            message: 'Connect database fail'
+        });
     });
 });
 
 // register a new user
 router.post('/register', (req, res, next) => {
-
-    // Enabling CORS
-    res.header("Access-Control-Allow-Origin", "*");
 
     var username = req.body.username;
     var password = req.body.password;
@@ -29,7 +30,9 @@ router.post('/register', (req, res, next) => {
 
     // check params
     if (!username || !password || !email || !fullname) {
-        res.send("Please input all fields.");
+        res.json({
+            message: 'Please input all fields'
+        });
     }
     else {
         // hash password
@@ -46,18 +49,19 @@ router.post('/register', (req, res, next) => {
 
         // add to database
         userModel.add(entity).then(id => {
-            res.send("Register success.");
+            res.json({
+                message: 'Register success'
+            });
         }).catch(err => {
-            res.send("Error: " + err);
+            res.json({
+                message: err
+            });
         })
     }
 });
 
 // login with username & password
 router.post('/login', (req, res, next) => {
-
-    // Enabling CORS
-    res.header("Access-Control-Allow-Origin", "*");
 
     passport.authenticate('local', {session: false}, (err, user, info) => {
         if (err) {
@@ -70,7 +74,9 @@ router.post('/login', (req, res, next) => {
         }
         req.login(user, {session: false}, (err) => {
             if (err) {
-               res.send(err);
+                res.json({
+                    message: err
+                });
             }
 
             // generate a signed son web token with the contents of user object and return it in the response

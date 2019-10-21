@@ -5,9 +5,6 @@ var router = express.Router();
 
 // get infomation
 router.get('/me', (req, res, next) => {
-
-    // Enabling CORS
-    res.header("Access-Control-Allow-Origin", "*");
     
     // for security, do not send password
     if (req.user.length > 0) {
@@ -17,7 +14,7 @@ router.get('/me', (req, res, next) => {
             email: user.email,
             fullname: user.fullname
         }
-        res.send({info});
+        res.json(info);
     }
 });
 
