@@ -53,8 +53,17 @@ router.post('/register', (req, res, next) => {
                 message: 'Đăng ký tài khoản thành công'
             });
         }).catch(err => {
+
+            var errMessage = err.code;
+
+            switch (err.code) {
+                case 'ER_DUP_ENTRY':
+                    errMessage = 'Tên đăng nhập đã tồn tại';
+                    break;
+            }
+
             res.status(400).json({
-                message: err
+                message: errMessage
             });
         })
     }

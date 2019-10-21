@@ -31,7 +31,7 @@ passport.use(new LocalStrategy({
         userModel.get(username).then(rows => {
             if (rows.length === 0) {
                 return done(null, false, {
-                    message: 'Tên tài khoản không tồn tại'
+                    message: 'Tài khoản không tồn tại'
                 });
             }
             var user = rows[0];
