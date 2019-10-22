@@ -5,12 +5,6 @@ var router = express.Router();
 
 // get infomation
 router.get('/me', (req, res, next) => {
-
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Headers', 'Accept-Language,Origin,X-Requested-With,Content-Type,Accept,Authorization');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
-    //next();
     
     // for security, do not send password
     if (req.user.length > 0) {
