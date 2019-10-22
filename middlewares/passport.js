@@ -18,6 +18,7 @@ passport.use(new JWTStrategy({
         return userModel.get(jwtPayload.username).then(user => {
             return done(null, user);
         }).catch(err => {
+            console.log("NGHIATQ 1: " + err)
             return done(err);
         });
     }
@@ -51,6 +52,7 @@ passport.use(new LocalStrategy({
                 })
             }
         }).catch(err => {
+            console.log("NGHIATQ 2: " + err)
             return done(err, false);
         })
     }
