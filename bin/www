@@ -22,6 +22,118 @@ app.set('port', port);
 var server = http.createServer(app);
 
 /**
+ * Create socket io.
+ */
+var io = require('socket.io')(server, { origins: '*:*' });
+
+var listRooms = [];
+
+io.on('connection', function (socket) {
+
+  socket.on('joinroom', function (data) {
+
+    // save data
+    socket.data = data;
+
+    // find an empty room
+    for (var i = 0; i < listRooms.length; i++) {
+
+      // it's empty when there is no second player
+      if (listRooms[i].playerO == null) {
+
+        // fill empty seat and join room
+        listRooms[i].playerO = data.fullname;
+        socket.room = listRooms[i].id;
+        socket.join(socket.room);
+
+        // send successful message to both
+        io.in(listRooms[i].id).emit('joinroom-success', listRooms[i]);
+
+        console.log('Room [' + socket.room + '] played');
+        return;
+      }
+    }
+
+    // create new room if there is no empty one
+    var room = {
+      id: data.username + Date.now(),
+      playerX: data.fullname,
+      playerO: null
+    }
+    listRooms.push(room);
+
+    // add this client to the room
+    socket.room = room.id;
+    socket.join(socket.room);
+
+    console.log('Room [' + socket.room + '] created');
+  });
+
+  socket.on('move', function (data) {
+    io.to(socket.room).emit('move', data);
+  });
+
+  socket.on('chat', function (data) {
+    socket.emit('chat', {
+      sender: 'Mình',
+      message: data
+    });
+    socket.to(socket.room).emit('chat', {
+      sender: 'ĐThủ',
+      message: data
+    });
+  });
+
+  socket.on('surrender-request', function (data) {
+    console.log('surrender-request from ' + socket.data.username);
+    io.to(socket.room).emit('surrender-request', '');
+  });
+
+  socket.on('ceasefire-request', function (data) {
+    console.log('ceasefire-request from ' + socket.data.username);
+    io.to(socket.room).emit('ceasefire-request', '');
+  });
+
+  socket.on('surrender-result', function (data) {
+    console.log('surrender-result from ' + socket.data.username);
+    io.to(socket.room).emit('surrender-result', data);
+  });
+
+  socket.on('ceasefire-result', function (data) {
+    console.log('ceasefire-result from ' + socket.data.username);
+    io.to(socket.room).emit('ceasefire-result', data);
+  });
+
+  socket.on('disconnect', function () {
+
+    // leave current room
+    socket.leave(socket.room);
+
+    // make the room empty or destroy it
+    for (var i = 0; i < listRooms.length; i++) {
+      if (listRooms[i].id == socket.room) {
+
+        // make it empty when first one leave
+        if (listRooms[i].playerO != null) {
+          listRooms[i].playerO = 'DISCONNECTED';
+          console.log('Player [' + socket.data.username + '] leave room [' + socket.room + ']');
+          
+          // inform the other
+          io.to(socket.room).emit('disconnect', listRooms[i]);
+        }
+
+        // destroy it when the other leave
+        else {
+          listRooms.splice(i, 1);
+          console.log('Room [' + socket.room + '] destroyed');
+        }
+        break;
+      }
+    }
+  });
+});
+
+/**
  * Listen on provided port, on all network interfaces.
  */
 
@@ -88,3 +200,5 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+module.exports = io;
