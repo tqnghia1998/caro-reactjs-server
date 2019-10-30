@@ -85,23 +85,19 @@ io.on('connection', function (socket) {
   });
 
   socket.on('surrender-request', function (data) {
-    console.log('surrender-request from ' + socket.data.username);
-    io.to(socket.room).emit('surrender-request', '');
+    socket.to(socket.room).emit('surrender-request', '');
   });
 
   socket.on('ceasefire-request', function (data) {
-    console.log('ceasefire-request from ' + socket.data.username);
-    io.to(socket.room).emit('ceasefire-request', '');
+    socket.to(socket.room).emit('ceasefire-request', '');
   });
 
   socket.on('surrender-result', function (data) {
-    console.log('surrender-result from ' + socket.data.username);
-    io.to(socket.room).emit('surrender-result', data);
+    socket.to(socket.room).emit('surrender-result', data);
   });
 
   socket.on('ceasefire-result', function (data) {
-    console.log('ceasefire-result from ' + socket.data.username);
-    io.to(socket.room).emit('ceasefire-result', data);
+    socket.to(socket.room).emit('ceasefire-result', data);
   });
 
   socket.on('disconnect', function () {
