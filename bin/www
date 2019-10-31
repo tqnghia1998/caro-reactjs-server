@@ -89,7 +89,7 @@ io.on('connection', function (socket) {
   });
 
   socket.on('ceasefire-request', function (data) {
-    socket.to(socket.room).emit('ceasefire-request', '');
+    socket.to(socket.room).emit('ceasefire-request', data);
   });
 
   socket.on('surrender-result', function (data) {
@@ -106,7 +106,15 @@ io.on('connection', function (socket) {
 
   socket.on('undo-result', function (data) {
     socket.to(socket.room).emit('undo-result', data);
-  })
+  });
+
+  socket.on('play-again-request', function (data) {
+    socket.to(socket.room).emit('play-again-request', data);
+  });
+
+  socket.on('play-again-result', function (data) {
+    socket.to(socket.room).emit('play-again-result', data);
+  });
 
   socket.on('disconnect', function () {
 
