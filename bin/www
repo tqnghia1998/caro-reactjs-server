@@ -100,6 +100,14 @@ io.on('connection', function (socket) {
     socket.to(socket.room).emit('ceasefire-result', data);
   });
 
+  socket.on('undo-request', function (data) {
+    socket.to(socket.room).emit('undo-request', data);
+  });
+
+  socket.on('undo-result', function (data) {
+    socket.to(socket.room).emit('undo-result', data);
+  })
+
   socket.on('disconnect', function () {
 
     // leave current room
