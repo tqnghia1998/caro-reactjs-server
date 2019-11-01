@@ -30,6 +30,47 @@ var listRooms = [];
 
 io.on('connection', function (socket) {
 
+  socket.on('on-reconnect', function (data) {
+
+    // find the room
+    if (data.roomInfo) {
+
+      socket.data = data.userInfo;
+
+      for (var i = 0; i < listRooms.length; i++) {
+        if (listRooms[i].id === data.roomInfo.id) {
+
+          // assigan player name
+          if (listRooms[i].playerO === 'DISCONNECTED') {
+            listRooms[i].playerO = data.userInfo.fullname;
+          }
+          else {
+            listRooms[i].playerX = data.userInfo.fullname;
+          }
+
+          // restore value
+          socket.room = listRooms[i].id;
+          socket.join(socket.room);
+
+          // inform the other
+          socket.to(socket.room).emit('on-reconnect', listRooms[i]);
+          console.log('Player [' + data.userInfo.username + '] reconnected in room [' + socket.room + ']');
+          
+          // send last move in case user missed it when reconnecting
+          if (listRooms[i].lastMove) {
+            socket.emit('move', listRooms[i].lastMove);
+          }
+          
+          return;
+        }
+      }
+
+      // in case the room was destroyed
+      socket.emit('on-reconnect', null);
+      console.log('there is a client find room but not success')
+    }
+  });
+
   socket.on('joinroom', function (data) {
 
     // save data
@@ -70,7 +111,14 @@ io.on('connection', function (socket) {
   });
 
   socket.on('move', function (data) {
-    io.to(socket.room).emit('move', data);
+    socket.to(socket.room).emit('move', data);
+
+    // mark last move
+    for (var i = 0; i < listRooms.length; i++) {
+      if (listRooms[i].id == socket.room) {
+        listRooms[i].lastMove = data;
+      }
+    }
   });
 
   socket.on('chat', function (data) {
@@ -118,6 +166,8 @@ io.on('connection', function (socket) {
 
   socket.on('disconnect', function () {
 
+    socket.removeAllListeners();
+
     // leave current room
     socket.leave(socket.room);
 
@@ -125,20 +175,35 @@ io.on('connection', function (socket) {
     for (var i = 0; i < listRooms.length; i++) {
       if (listRooms[i].id == socket.room) {
 
-        // make it empty when first one leave
-        if (listRooms[i].playerO != null) {
-          listRooms[i].playerO = 'DISCONNECTED';
-          console.log('Player [' + socket.data.username + '] leave room [' + socket.room + ']');
-          
-          // inform the other
-          io.to(socket.room).emit('disconnect', listRooms[i]);
-        }
-
-        // destroy it when the other leave
-        else {
+        // destroy it when the room just created, second player hasn't enter yet
+        if (listRooms[i].playerO == null) {
           listRooms.splice(i, 1);
           console.log('Room [' + socket.room + '] destroyed');
         }
+        // mark the room empty by set flag DISCONNECTED for the one left 
+        else {
+
+          if (listRooms[i].playerO === socket.data.fullname) {
+            listRooms[i].playerO = 'DISCONNECTED';
+          }
+          else {
+            listRooms[i].playerX = 'DISCONNECTED';
+          }
+
+          // check if both is disconnect
+          if (listRooms[i].playerO === 'DISCONNECTED' && listRooms[i].playerX === 'DISCONNECTED') {
+
+            // destroy the room
+            listRooms.splice(i, 1);
+            console.log('Room [' + socket.room + '] destroyed');
+          } else {
+          
+            // inform the other
+            io.to(socket.room).emit('disconnect', listRooms[i]);
+            console.log('Player [' + socket.data.username + '] leave room [' + socket.room + ']');
+          }
+        }
+        
         break;
       }
     }
