@@ -67,7 +67,7 @@ io.on('connection', function (socket) {
 
       // in case the room was destroyed
       socket.emit('on-reconnect', null);
-      console.log('there is a client find room but not success')
+      console.log('Player [' + data.userInfo.username + '] find room [' + data.roomInfo.id + '] but not exists');
     }
   });
 
@@ -199,7 +199,7 @@ io.on('connection', function (socket) {
           } else {
           
             // inform the other
-            io.to(socket.room).emit('disconnect', listRooms[i]);
+            io.to(listRooms[i].id).emit('disconnect', listRooms[i]);
             console.log('Player [' + socket.data.username + '] leave room [' + socket.room + ']');
           }
         }
