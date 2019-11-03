@@ -1,64 +1,64 @@
 module.exports = function () {
     var win = [
-    [1, 1, 1, 1, 1]
+        [1, 1, 1, 1, 1]
     ];
     var unCovered4 = [
-    [0, 1, 1, 1, 1, 0]
+        [0, 1, 1, 1, 1, 0]
     ];
     var unCovered3 = [
-    [0, 1, 1, 1, 0, 0],
-    [0, 0, 1, 1, 1, 0],
-    [0, 1, 0, 1, 1, 0],
-    [0, 1, 1, 0, 1, 0]
+        [0, 1, 1, 1, 0, 0],
+        [0, 0, 1, 1, 1, 0],
+        [0, 1, 0, 1, 1, 0],
+        [0, 1, 1, 0, 1, 0]
     ];
     var unCovered2 = [
-    [0, 0, 1, 1, 0, 0],
-    [0, 1, 0, 1, 0, 0],
-    [0, 0, 1, 0, 1, 0],
-    [0, 1, 1, 0, 0, 0],
-    [0, 0, 0, 1, 1, 0],
-    [0, 1, 0, 0, 1, 0]
+        [0, 0, 1, 1, 0, 0],
+        [0, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 1, 0],
+        [0, 1, 1, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0],
+        [0, 1, 0, 0, 1, 0]
     ];
     var covered4 = [
-    [-1, 1, 0, 1, 1, 1],
-    [-1, 1, 1, 0, 1, 1],
-    [-1, 1, 1, 1, 0, 1],
-    [-1, 1, 1, 1, 1, 0],
-    [0, 1, 1, 1, 1, -1],
-    [1, 0, 1, 1, 1, -1],
-    [1, 1, 0, 1, 1, -1],
-    [1, 1, 1, 0, 1, -1]
+        [-1, 1, 0, 1, 1, 1],
+        [-1, 1, 1, 0, 1, 1],
+        [-1, 1, 1, 1, 0, 1],
+        [-1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, -1],
+        [1, 0, 1, 1, 1, -1],
+        [1, 1, 0, 1, 1, -1],
+        [1, 1, 1, 0, 1, -1]
     ];
     var covered3 = [
-    [-1, 1, 1, 1, 0, 0],
-    [-1, 1, 1, 0, 1, 0],
-    [-1, 1, 0, 1, 1, 0],
-    [0, 0, 1, 1, 1, -1],
-    [0, 1, 0, 1, 1, -1],
-    [0, 1, 1, 0, 1, -1],
-    [-1, 1, 0, 1, 0, 1, -1],
-    [-1, 0, 1, 1, 1, 0, -1],
-    [-1, 1, 1, 0, 0, 1, -1],
-    [-1, 1, 0, 0, 1, 1, -1]
+        [-1, 1, 1, 1, 0, 0],
+        [-1, 1, 1, 0, 1, 0],
+        [-1, 1, 0, 1, 1, 0],
+        [0, 0, 1, 1, 1, -1],
+        [0, 1, 0, 1, 1, -1],
+        [0, 1, 1, 0, 1, -1],
+        [-1, 1, 0, 1, 0, 1, -1],
+        [-1, 0, 1, 1, 1, 0, -1],
+        [-1, 1, 1, 0, 0, 1, -1],
+        [-1, 1, 0, 0, 1, 1, -1]
     ];
 
-    (function() {
-    var allCombos = [win, unCovered4, unCovered3, unCovered2, covered4, covered3];
-    for (var k = 0; k < allCombos.length; k++) {
-        var temp = [];
-        for (var j = 0; j < allCombos[k].length; j++) {
-        var tmp = [];
-        for (var i = 0; i < allCombos[k][j].length; i++)
-            tmp[i] = -allCombos[k][j][i];
-        temp.push(tmp);
+    (function () {
+        var allCombos = [win, unCovered4, unCovered3, unCovered2, covered4, covered3];
+        for (var k = 0; k < allCombos.length; k++) {
+            var temp = [];
+            for (var j = 0; j < allCombos[k].length; j++) {
+                var tmp = [];
+                for (var i = 0; i < allCombos[k][j].length; i++)
+                    tmp[i] = -allCombos[k][j][i];
+                temp.push(tmp);
+            }
+            for (var m = 0; m < temp.length; m++) {
+                allCombos[k].push(temp[m]);
+            }
         }
-        for (var m = 0; m < temp.length; m++) {
-        allCombos[k].push(temp[m]);
-        }
-    }
     }());
 
-    var valueCombo = function(w, u2, u3, u4, c3, c4) {
+    var valueCombo = function (w, u2, u3, u4, c3, c4) {
         if (w > 0) return 1000000000;
         if (u4 > 0) return 100000000;
         if (c4 > 1) return 10000000;
@@ -101,22 +101,22 @@ module.exports = function () {
         return 0;
     };
 
-    var findArray = function(arr, inArr) {
+    var findArray = function (arr, inArr) {
         var fCount = arr.length;
         var sCount = inArr.length;
         var k;
         for (var i = 0; i <= fCount - sCount; i++) {
             k = 0;
             for (var j = 0; j < sCount; j++) {
-            if (arr[i + j] == inArr[j]) k++;
-            else break;
+                if (arr[i + j] == inArr[j]) k++;
+                else break;
             }
             if (k == sCount) return true;
         }
         return false;
     };
 
-    var isAnyInArrays = function(combos, arr) {
+    var isAnyInArrays = function (combos, arr) {
         for (var i = 0; i < combos.length; i++) {
             if (findArray(arr, combos[i])) return true;
         }
@@ -125,13 +125,13 @@ module.exports = function () {
 
     var combinations = {};
     combinations.winValue = 1000000000;
-    combinations.valuePosition = function(arr1, arr2, arr3, arr4) {
+    combinations.valuePosition = function (arr1, arr2, arr3, arr4) {
         var w = 0,
-        u2 = 0,
-        u3 = 0,
-        u4 = 0,
-        c3 = 0,
-        c4 = 0;
+            u2 = 0,
+            u3 = 0,
+            u4 = 0,
+            c3 = 0,
+            c4 = 0;
         var allArr = [arr1, arr2, arr3, arr4];
         for (var i = 0; i < allArr.length; i++) {
             if (isAnyInArrays(win, allArr[i])) {

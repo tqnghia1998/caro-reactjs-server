@@ -1,7 +1,7 @@
 var initCombinations = require('./combinations');
 
 // Function init board
-Array.matrix = function(m, n, initial) {
+Array.matrix = function (m, n, initial) {
     var a, i, j, mat = [];
     for (i = 0; i < m; i++) {
         a = [];
@@ -14,11 +14,11 @@ Array.matrix = function(m, n, initial) {
 };
 
 // Function get rival sign
-getBotSign = function (player) {
+getRivalSign = function (player) {
     return -player;
 }
 
-module.exports = function (player) {
+module.exports = function () {
 
     /**
      * Khởi tạo biến
@@ -26,7 +26,7 @@ module.exports = function (player) {
     var ring = 1;
     var boardSize = 20;
     var curState = Array.matrix(20, 20, 0);
-    var maxPlayer = player || getBotSign(player);
+    var botPlayer = getRivalSign(1);
     var combinations = initCombinations();
     var history = [JSON.parse(JSON.stringify(curState))];
     var currentStep = 0;
@@ -42,7 +42,7 @@ module.exports = function (player) {
         // Duyệt bàn cờ để lấy các ô trống (candidates)
         for (var i = 0; i < boardSize; i++) {
             for (var j = 0; j < boardSize; j++) {
-            
+
                 // Nếu ô hiện tại đã đánh
                 if (parent[i][j] != 0) {
 
@@ -82,9 +82,9 @@ module.exports = function (player) {
                     tmp[m][n] = parent[m][n];
                 }
             }
-            
+
             // Lấp đầy các ô trống hiện tại bằng nước cờ của đối thủ
-            tmp[candidates[f][0]][candidates[f][1]] = getBotSign(player);
+            tmp[candidates[f][0]][candidates[f][1]] = getRivalSign(player);
 
             // Đưa vào danh sách bàn cờ tương lai
             children.push({
@@ -109,14 +109,14 @@ module.exports = function (player) {
         return heuristic(child, parent);
     };
 
-    var getCombo = function(board, curPlayer, i, j, dx, dy) {
+    var getCombo = function (board, curPlayer, i, j, dx, dy) {
         var combo = [curPlayer];
         for (var m = 1; m < 5; m++) {
             var nextX1 = i - dx * m;
             var nextY1 = j - dy * m;
             if (nextX1 >= boardSize || nextY1 >= boardSize || nextX1 < 0 || nextY1 < 0) break;
             var next1 = board[nextX1][nextY1];
-            if (board[nextX1][nextY1] == getBotSign(curPlayer)) {
+            if (next1 == getRivalSign(curPlayer)) {
                 combo.unshift(next1);
                 break;
             }
@@ -127,7 +127,7 @@ module.exports = function (player) {
             var nextY = j + dy * k;
             if (nextX >= boardSize || nextY >= boardSize || nextX < 0 || nextY < 0) break;
             var next = board[nextX][nextY];
-            if (next == getBotSign(curPlayer)) {
+            if (next == getRivalSign(curPlayer)) {
                 combo.push(next);
                 break;
             }
@@ -136,7 +136,7 @@ module.exports = function (player) {
         return combo;
     };
 
-    var heuristic = function(futureBoard, currentBoard) {
+    var heuristic = function (futureBoard, currentBoard) {
         for (var i = 0; i < boardSize; i++) {
             for (var j = 0; j < boardSize; j++) {
                 if (futureBoard[i][j] != currentBoard[i][j]) {
@@ -147,21 +147,21 @@ module.exports = function (player) {
                         getCombo(futureBoard, curCell, i, j, 1, 1),
                         getCombo(futureBoard, curCell, i, j, 1, -1)
                     );
-                    futureBoard[i][j] = getBotSign(curCell);
+                    futureBoard[i][j] = getRivalSign(curCell);
                     var oppositeVal = combinations.valuePosition(
-                        getCombo(futureBoard, getBotSign(curCell), i, j, 1, 0),
-                        getCombo(futureBoard, getBotSign(curCell), i, j, 0, 1),
-                        getCombo(futureBoard, getBotSign(curCell), i, j, 1, 1),
-                        getCombo(futureBoard, getBotSign(curCell), i, j, 1, -1)
+                        getCombo(futureBoard, getRivalSign(curCell), i, j, 1, 0),
+                        getCombo(futureBoard, getRivalSign(curCell), i, j, 0, 1),
+                        getCombo(futureBoard, getRivalSign(curCell), i, j, 1, 1),
+                        getCombo(futureBoard, getRivalSign(curCell), i, j, 1, -1)
                     );
-                    futureBoard[i][j] = getBotSign(curCell);
+                    futureBoard[i][j] = getRivalSign(curCell);
                     return 2 * playerVal + oppositeVal;
                 }
             }
         }
         return 0;
     };
-    
+
     /**
      * Thực hiện tác động lên bàn cờ
      */
@@ -184,7 +184,7 @@ module.exports = function (player) {
 
         // Nếu là lượt của bot thì lấy lại lượt 'sẽ' đi
         currentStep = step + (isBotMove ? 1 : 0);
-        
+
         // Lấy trạng thái tại bước này
         curState = history[currentStep];
 
@@ -192,50 +192,50 @@ module.exports = function (player) {
     }
 
     getLogic.makeBotMove = function (x, y) {
-        curState[x][y] = getBotSign(maxPlayer);
+        curState[x][y] = getRivalSign(botPlayer);
         history.push(JSON.parse(JSON.stringify(curState)));
         currentStep++;
     };
 
     getLogic.makePlayerMove = function (x, y) {
-        
+
         // Đánh vào bàn cờ
-        curState[x][y] = maxPlayer;
+        curState[x][y] = botPlayer;
         if (currentStep < history.length - 1) {
             history = history.slice(0, currentStep);
         }
         currentStep++;
         history.push(JSON.parse(JSON.stringify(curState)));
-        
+
         // Tìm nước đi cho bot
         var botMove = [-1, -1];
-        var candidateBoards = getChilds(curState, maxPlayer);
+        var candidateBoards = getChilds(curState, botPlayer);
         var maxChild = -1;
         var maxValue = Number.MIN_VALUE;
         var listCandidateCells = [];
 
         // Duyệt tất cả bàn cờ tương lai
         for (var k = 0; k < candidateBoards.length; k++) {
-            
+
             // Tính minimax
             var curValue = miniMax(candidateBoards[k].board, curState);
 
             // Lấy danh sách các giá trị cao nhất
             if (maxValue == curValue) {
                 listCandidateCells.push(k);
-            }
-            else if (maxValue < curValue) {
+            } else if (maxValue < curValue) {
                 maxValue = curValue;
                 listCandidateCells = [k];
             }
         }
-        // Sẽ có thể có nhiều bàn cờ có minimax cao nhất mà bằng nhau, nên ta sẽ lấy ngẫu nhiên
-        maxChild = listCandidateCells[Math.floor(Math.random() * listCandidateCells.length)];
+        // Sẽ có thể có nhiều bàn cờ có minimax cao nhất mà bằng nhau, nên ta có thể lấy ngẫu nhiên
+        const random = 0;
+        maxChild = listCandidateCells[random];
 
         // Cập nhật bàn cờ hiện tại
         if (candidateBoards[maxChild]) {
             botMove = candidateBoards[maxChild].cell;
-            curState[botMove[0]][botMove[1]] = getBotSign(maxPlayer);
+            curState[botMove[0]][botMove[1]] = getRivalSign(botPlayer);
             currentStep++;
             history.push(JSON.parse(JSON.stringify(curState)));
         }
