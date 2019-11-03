@@ -27,6 +27,7 @@ var server = http.createServer(app);
 var io = require('socket.io')(server, { origins: '*:*' });
 
 var listRooms = [];
+var initLogic = require('../ai/logic');
 
 io.on('connection', function (socket) {
 
@@ -110,9 +111,64 @@ io.on('connection', function (socket) {
     console.log('Room [' + socket.room + '] created');
   });
 
-  socket.on('move', function (data) {
-    socket.to(socket.room).emit('move', data);
+  /**
+   * please not try to understand the algorithm, it is complicated
+   */
+  socket.on('joinroom-ai', function (data) {
 
+    // save data
+    socket.data = data;
+
+    // create new room with AI
+    var room = {
+      id: data.username + Date.now(),
+      playerX: data.fullname,
+      playerO: 'I am Bot'
+    }
+    listRooms.push(room);
+
+    // mark flag
+    socket.room = room.id;
+    socket.withBot = true;
+    socket.emit('joinroom-success-ai', room);
+
+    // initialize logic game on server
+    socket.logic = initLogic(1);
+
+    // bot will do the first move (hard mode)
+    const randX = Math.floor(Math.random() * 10 + 5);
+    const randY = Math.floor(Math.random() * 10 + 5);
+    socket.logic.makeBotMove(randX, randY);
+    socket.emit('move', {
+      row: randX,
+      col: randY
+    });
+
+    console.log('Room [' + socket.room + '] with AI created');
+  });
+
+  // has handle bot
+  socket.on('move', function (data) {
+
+    if (socket.withBot) {
+
+      // Save to logic server and get bot move
+      const botMove = socket.logic.makePlayerMove(data.row, data.col);
+
+      if (botMove[0] == -1 && botMove[1] == -1) {
+        socket.emit('surrender-request', 'I am bot');
+      }
+      else {
+        socket.emit('move', {
+          row: botMove[0],
+          col: botMove[1]
+        })
+      }
+    }
+    else {
+      socket.to(socket.room).emit('move', data);
+    }
+    
     // mark last move
     for (var i = 0; i < listRooms.length; i++) {
       if (listRooms[i].id == socket.room) {
@@ -121,43 +177,113 @@ io.on('connection', function (socket) {
     }
   });
 
+  // has handle bot
   socket.on('chat', function (data) {
-    socket.emit('chat', {
-      sender: 'Mình',
-      message: data
-    });
-    socket.to(socket.room).emit('chat', {
-      sender: 'ĐThủ',
-      message: data
-    });
+    if (socket.withBot) {
+      socket.emit('chat', {
+        sender: 'Mình',
+        message: data
+      });
+      socket.emit('chat', {
+        sender: 'ĐThủ',
+        message: 'I am just a Bot'
+      });
+    }
+    else {
+      socket.emit('chat', {
+        sender: 'Mình',
+        message: data
+      });
+      socket.to(socket.room).emit('chat', {
+        sender: 'ĐThủ',
+        message: data
+      });
+    }
   });
 
+  // has handle bot
   socket.on('surrender-request', function (data) {
-    socket.to(socket.room).emit('surrender-request', '');
-  });
-
-  socket.on('ceasefire-request', function (data) {
-    socket.to(socket.room).emit('ceasefire-request', data);
+    if (socket.withBot) {
+      socket.emit('surrender-result', {
+        message: 'yes',
+        noAlert: true
+      });
+    }
+    else {
+      socket.to(socket.room).emit('surrender-request', '');
+    }
   });
 
   socket.on('surrender-result', function (data) {
     socket.to(socket.room).emit('surrender-result', data);
   });
 
+  // has handle bot
+  socket.on('ceasefire-request', function (data) {
+    if (socket.withBot) {
+      socket.emit('ceasefire-result', {
+        message: 'yes',
+        noAlert: true
+      });
+    }
+    else {
+      socket.to(socket.room).emit('ceasefire-request', data);
+    }
+  });
+
   socket.on('ceasefire-result', function (data) {
     socket.to(socket.room).emit('ceasefire-result', data);
   });
 
+  // has handle bot
   socket.on('undo-request', function (data) {
-    socket.to(socket.room).emit('undo-request', data);
+    if (socket.withBot) {
+
+      socket.emit('undo-result', {
+        noAlert: true,
+        message: 'yes',
+        stepNumber: data.stepNumber
+      });
+
+      if (socket.logic.rollBackTo(data.stepNumber, data.x, data.y)) {
+        setTimeout(function () {
+          socket.emit('move', {
+            row: data.nextX,
+            col: data.nextY
+          });
+        }, 1000);
+      }
+    }
+    else {
+      socket.to(socket.room).emit('undo-request', data);
+    }
   });
 
   socket.on('undo-result', function (data) {
     socket.to(socket.room).emit('undo-result', data);
   });
 
+  // has handle bot
   socket.on('play-again-request', function (data) {
-    socket.to(socket.room).emit('play-again-request', data);
+    if (socket.withBot) {
+      socket.emit('play-again-result', {
+        message: 'yes',
+        noAlert: true
+      });
+
+      // Bot auto first move
+      socket.logic.reset();
+      const randX = Math.floor(Math.random() * 10 + 5);
+      const randY = Math.floor(Math.random() * 10 + 5);
+      socket.logic.makeBotMove(randX, randY);
+      socket.emit('move', {
+        row: randX,
+        col: randY
+      });
+    }
+    else {
+      socket.to(socket.room).emit('play-again-request', data);
+    }
   });
 
   socket.on('play-again-result', function (data) {
@@ -176,7 +302,7 @@ io.on('connection', function (socket) {
       if (listRooms[i].id == socket.room) {
 
         // destroy it when the room just created, second player hasn't enter yet
-        if (listRooms[i].playerO == null) {
+        if (socket.withBot || listRooms[i].playerO == null) {
           listRooms.splice(i, 1);
           console.log('Room [' + socket.room + '] destroyed');
         }
