@@ -13,5 +13,9 @@ module.exports = {
 
     get: username => {
         return db.load(`select * from users where username = '${username}'`);
-    }
+    },
+
+    put: entity => {
+        return db.update(`users`, `username`, entity);
+    },
 }

@@ -6,6 +6,7 @@ var passport = require('passport');
 var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var router = express.Router();
+var passport = require('passport');
 
 // test loading database
 router.post('/', (req, res, next) => {
@@ -96,6 +97,73 @@ router.post('/login', (req, res, next) => {
             });
         });
     })(req, res);
+});
+
+// register a new user
+router.post('/changeinfo', passport.authenticate('jwt', {session: false}), (req, res, next) => {
+
+    var username = req.body.username;
+    var oldPassword = req.body.oldPassword;
+    var password = req.body.password;
+    var email = req.body.email;
+    var fullname = req.body.fullname;
+
+    // check params
+    if (!username || !email || !fullname) {
+        res.status(400).json({
+            message: 'Vui lòng nhập đầy đủ thông tin'
+        });
+    }
+    else {
+        userModel.get(username).then(rows => {
+            if (rows.length === 0) {
+                return res.status(400).json({
+                    message: 'Tài khoản không tồn tại'
+                });
+            }
+            var user = rows[0];
+
+            // update basic info
+            var entity = {
+                username: username,
+                email: email,
+                fullname: fullname
+            }
+
+            // update password
+            if (oldPassword || password) {
+
+                // compare password
+                var ret = bcrypt.compareSync(oldPassword, user.password);
+                if (!ret) {
+                    return res.status(400).json({
+                        message: 'Mật khẩu cũ không chính xác'
+                    });
+                }
+                else {
+                    var saltRounds = 10;
+                    var hash = bcrypt.hashSync(password, saltRounds);
+                    entity.password = hash;
+                }
+            }
+
+            // write to database
+            userModel.put(entity).then(id => {
+                return res.status(200).json({
+                    message: 'Cập nhật thông tin thành công'
+                });
+            }).catch(err => {
+                return res.status(400).json({
+                    message: 'Đã xảy ra lỗi, vui lòng thử lại'
+                });
+            })
+            
+        }).catch(err => {
+            return res.status(400).json({
+                message: 'Đã xảy ra lỗi, vui lòng thử lại'
+            });
+        })
+    }
 });
 
 module.exports = router;
