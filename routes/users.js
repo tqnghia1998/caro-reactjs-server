@@ -99,6 +99,18 @@ router.post('/login', (req, res, next) => {
     })(req, res);
 });
 
+// facebook login
+router.get('/login/facebook', passport.authenticate('facebook', { scope: ['email'] }));
+
+router.get('/login/facebook/callback', passport.authenticate('facebook', {
+        session: false,
+        //failureRedirect: 'https://btgk-1612422.herokuapp.com/login',
+        failureRedirect: '//localhost:3001/login',
+}), (req, res) => {
+        const token = jwt.sign(JSON.stringify(req.user), 'nghiatq_jwt_secretkey');
+        res.redirect('//localhost:3001/login?token=' + token);
+});
+
 // register a new user
 router.post('/changeinfo', passport.authenticate('jwt', {session: false}), (req, res, next) => {
 

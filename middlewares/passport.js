@@ -1,12 +1,20 @@
 const passport = require('passport');
 const passportJWT = require("passport-jwt");
 const bcrypt = require('bcrypt');
-
 const userModel = require('../models/users.model');
-
 const LocalStrategy = require('passport-local').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
+const configAuth = require('../utils/facebook');
 const JWTStrategy = passportJWT.Strategy;
 const ExtractJWT = passportJWT.ExtractJwt;
+
+passport.serializeUser(function(user, done) {
+    done(null, user);
+});
+  
+passport.deserializeUser(function(obj, done) {
+    done(null, obj);
+});
 
 passport.use(new JWTStrategy({
         jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
@@ -55,3 +63,52 @@ passport.use(new LocalStrategy({
         })
     }
 ));
+
+passport.use(new FacebookStrategy({
+    clientID: configAuth.facebookAuth.clientID,
+    clientSecret: configAuth.facebookAuth.clientSecret,
+    callbackURL: configAuth.facebookAuth.callbackURL,
+    profileFields: ['id','displayName','email','first_name','last_name','middle_name']
+},
+    // facebook will send user token and profile information
+    function (token, refreshToken, profile, done) {
+    
+    // this is asynchronous
+    process.nextTick(function () {
+
+        // look up into database to see if it already has this user
+        userModel.get(profile.id).then(rows => {
+
+            // if account exists, just return it
+            if (rows.length > 0) {
+                return done(null, {
+                    username: rows[0].username
+                });
+            }
+            
+            // if it doesn't have any, create one
+            var entity = {
+                username: profile.id,
+                password: token,
+                email: profile.emails[0].value,
+                fullname: profile.displayName
+            }
+
+            // add to database
+            userModel.add(entity).then(id => {
+                return done(null, {
+                    username: entity.username
+                });
+            }).catch(err => {
+                console.log("Error when add facebook user: ", err);
+                return done(null, false);
+            });
+
+        }).catch(err => {
+            if (err) {
+                console.log("Error when get user by facebook id: ", err);
+                return done(null, false);
+            }
+        });
+    });
+}))
