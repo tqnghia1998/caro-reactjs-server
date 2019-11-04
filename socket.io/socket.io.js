@@ -156,10 +156,12 @@ module.exports = function (io, socket) {
           sender: 'Mình',
           message: data
         });
-        socket.emit('chat', {
-          sender: 'ĐThủ',
-          message: 'I am just a Bot'
-        });
+        if (!data.startsWith('@@@AVATAR_SIGNAL@@@')) {
+          socket.emit('chat', {
+            sender: 'ĐThủ',
+            message: 'I am just a Bot'
+          });
+        }
       }
       else {
         socket.emit('chat', {
