@@ -4,7 +4,8 @@ const bcrypt = require('bcrypt');
 const userModel = require('../models/users.model');
 const LocalStrategy = require('passport-local').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
-const configAuth = require('../utils/facebook');
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+const configAuth = require('../utils/oauth');
 const JWTStrategy = passportJWT.Strategy;
 const ExtractJWT = passportJWT.ExtractJwt;
 
@@ -68,47 +69,97 @@ passport.use(new FacebookStrategy({
     clientID: configAuth.facebookAuth.clientID,
     clientSecret: configAuth.facebookAuth.clientSecret,
     callbackURL: configAuth.facebookAuth.callbackURL,
-    profileFields: ['id','displayName','email','first_name','last_name','middle_name']
+    profileFields: ['id', 'displayName', 'email', 'first_name', 'last_name', 'middle_name']
 },
     // facebook will send user token and profile information
     function (token, refreshToken, profile, done) {
     
-    // this is asynchronous
-    process.nextTick(function () {
+        // this is asynchronous
+        process.nextTick(function () {
 
-        // look up into database to see if it already has this user
-        userModel.get(profile.id).then(rows => {
+            // look up into database to see if it already has this user
+            userModel.get(profile.id).then(rows => {
 
-            // if account exists, just return it
-            if (rows.length > 0) {
-                return done(null, {
-                    username: rows[0].username
-                });
-            }
+                // if account exists, just return it
+                if (rows.length > 0) {
+                    return done(null, {
+                        username: rows[0].username
+                    });
+                }
             
-            // if it doesn't have any, create one
-            var entity = {
-                username: profile.id,
-                password: token,
-                email: profile.emails[0].value,
-                fullname: profile.displayName
-            }
+                // if it doesn't have any, create one
+                var entity = {
+                    username: profile.id,
+                    password: token,
+                    email: profile.emails[0].value,
+                    fullname: profile.displayName
+                }
 
-            // add to database
-            userModel.add(entity).then(id => {
-                return done(null, {
-                    username: entity.username
+                // add to database
+                userModel.add(entity).then(id => {
+                    return done(null, {
+                        username: entity.username
+                    });
+                }).catch(err => {
+                    console.log("Error when add facebook user: ", err);
+                    return done(null, false);
                 });
-            }).catch(err => {
-                console.log("Error when add facebook user: ", err);
-                return done(null, false);
-            });
 
-        }).catch(err => {
-            if (err) {
-                console.log("Error when get user by facebook id: ", err);
-                return done(null, false);
-            }
+            }).catch(err => {
+                if (err) {
+                    console.log("Error when get user by facebook id: ", err);
+                    return done(null, false);
+                }
+            });
         });
-    });
-}))
+    })
+);
+
+passport.use(new GoogleStrategy({
+    clientID: configAuth.googleAuth.clientID,
+    clientSecret: configAuth.googleAuth.clientSecret,
+    callbackURL: configAuth.googleAuth.callbackURL,
+},
+    
+    // exactly the same as facebook
+    function (token, refreshToken, profile, done) {
+
+        process.nextTick(function () {
+
+            // look up into database to see if it already has this user
+            userModel.get(profile.id).then(rows => {
+
+                // if account exists, just return it
+                if (rows.length > 0) {
+                    return done(null, {
+                        username: rows[0].username
+                    });
+                }
+            
+                // if it doesn't have any, create one
+                var entity = {
+                    username: profile.id,
+                    password: token,
+                    email: profile.emails[0].value,
+                    fullname: profile.displayName
+                }
+
+                // add to database
+                userModel.add(entity).then(id => {
+                    return done(null, {
+                        username: entity.username
+                    });
+                }).catch(err => {
+                    console.log("Error when add google user: ", err);
+                    return done(null, false);
+                });
+
+            }).catch(err => {
+                if (err) {
+                    console.log("Error when get user by google id: ", err);
+                    return done(null, false);
+                }
+            });
+        });
+    })
+);
