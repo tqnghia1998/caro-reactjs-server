@@ -1,18 +1,8 @@
 var mysql = require('mysql');
+var config = require('../config.js')
 
 var createConnection = () => {
-    return mysql.createConnection({
-        // host: 'localhost',
-        // port: '3306',
-        // user: 'root',
-        // password: 'admin',
-        // database: 'web-btcn06-1612422'
-        host: 'sql12.freemysqlhosting.net',
-        port: '3306',
-        user: 'sql12308370',
-        password: 'xLicY5Js7i',
-        database: 'sql12308370'
-    });
+    return mysql.createConnection(config.database);
 }
 module.exports = {
     load: sql => {

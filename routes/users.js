@@ -7,6 +7,7 @@ var bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var router = express.Router();
 var passport = require('passport');
+var config = require('../config.js');
 
 // test loading database
 router.post('/', (req, res, next) => {
@@ -103,12 +104,11 @@ router.post('/login', (req, res, next) => {
 router.get('/login/facebook', passport.authenticate('facebook', { scope: ['email'] }));
 
 router.get('/login/facebook/callback', passport.authenticate('facebook', {
-        session: false,
-        //failureRedirect: 'https://btgk-1612422.herokuapp.com/login',
-        failureRedirect: '//localhost:3001/login',
+    session: false,
+    failureRedirect: config['client-domain'] + 'login/',
 }), (req, res) => {
-        const token = jwt.sign(JSON.stringify(req.user), 'nghiatq_jwt_secretkey');
-        res.redirect('//localhost:3001/login?token=' + token);
+    const token = jwt.sign(JSON.stringify(req.user), 'nghiatq_jwt_secretkey');
+    res.redirect(config['client-domain'] + 'login?token=' + token);
 });
 
 // register a new user
