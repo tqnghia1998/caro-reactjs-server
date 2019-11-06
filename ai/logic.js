@@ -186,6 +186,9 @@ module.exports = function () {
         currentStep = step + (isBotMove ? 1 : 0);
 
         // Lấy trạng thái tại bước này
+        if (currentStep > history.length - 1) {
+            currentStep = history.length - 1;
+        }
         curState = history[currentStep];
 
         return isBotMove;
@@ -202,7 +205,7 @@ module.exports = function () {
         // Đánh vào bàn cờ
         curState[x][y] = botPlayer;
         if (currentStep < history.length - 1) {
-            history = history.slice(0, currentStep);
+            history = history.slice(0, currentStep + 1);
         }
         currentStep++;
         history.push(JSON.parse(JSON.stringify(curState)));
