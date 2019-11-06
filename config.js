@@ -37,4 +37,4 @@ var exports_3 = {
     }
 }
 
-module.exports = exports_1;
+module.exports = exports_3;
